@@ -33,4 +33,6 @@ jobs:
       - name: Upload Excel to Box
         env:
           BOX_CONFIG_JSON: ${{ secrets.BOX_CONFIG_JSON }}
-        run: python upload_to_box.py
+        run: |
+          python -m pip show boxsdk
+          python upload_to_box.py
