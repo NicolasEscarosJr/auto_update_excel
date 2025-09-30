@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pandas psycopg2-binary openpyxl boxsdk[jwt]
+          python -m pip install -r requirements.txt
 
       - name: Run Python script
         env:
@@ -34,7 +34,9 @@ jobs:
         env:
           BOX_CONFIG_JSON: ${{ secrets.BOX_CONFIG_JSON }}
         run: |
+          echo "🔍 Checking if boxsdk is installed..."
           python -m pip show boxsdk
+          echo "📁 Current directory contents:"
           ls -al
-          python -m upload_to_box
-
+          echo "🚀 Running upload script..."
+          python upload_to_box.py
