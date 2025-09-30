@@ -1,0 +1,39 @@
+name: Auto Update Excel
+
+on:
+  schedule:
+    - cron: '0 2 * * 5'  # Every Friday at 02:00 AM UTC
+  workflow_dispatch:
+
+jobs:
+  update_excel:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Excel update script
+      env:
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      run: python auto_update_excel.py
+
+    - name: Upload output Excel as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: updated_excel
+        path: output/
