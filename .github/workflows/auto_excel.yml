@@ -17,7 +17,9 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt boxsdk pandas psycopg2-binary openpyxl
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run Python script
         env:
