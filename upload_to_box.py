@@ -3,23 +3,30 @@ import json
 import datetime
 from boxsdk import JWTAuth, Client
 
-# Load Box config
+# Load Box config from GitHub secret
 raw_json = os.environ["BOX_CONFIG_JSON"]
 config = json.loads(raw_json)
-print("✅ Loaded Box config OK")
+print("Loaded Box config OK")
 
-# Authenticate
-auth = JWTAuth.from_settings_dictionary(config["boxAppSettings"])
+# Authenticate with Box
+auth = JWTAuth.from_settings_dictionary(config)
+auth.authenticate_instance()
 client = Client(auth)
 
-# Folder ID
+# Target folder ID (replace with your real one)
 folder_id = "224419986473"
 
-# Today's date
+# Build today's filename
 today = datetime.datetime.now().strftime("%m%d")
 filename = f"企業一覧とユーザー一覧_{today}.xlsx"
+file_path = f"output/{filename}"
 
-# Upload
+# Check file exists before upload
+if not os.path.exists(file_path):
+    raise FileNotFoundError(f"❌ File not found: {file_path}")
+
+# Upload to Box
 folder = client.folder(folder_id=folder_id)
-uploaded_file = folder.upload(f"output/{filename}", file_name=filename)
-print(" File uploaded:", uploaded_file.get_shared_link_download_url())
+uploaded_file = folder.upload(file_path, file_name=filename)
+print("✅ File uploaded successfully!")
+print("📎 Download link:", uploaded_file.get_shared_link_download_url())
