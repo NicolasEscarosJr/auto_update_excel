@@ -28,31 +28,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: python auto_update_excel.py
 
-      - name: Upload to Box
+      - name: Upload Excel to Box
         env:
           BOX_CONFIG_JSON: ${{ secrets.BOX_CONFIG_JSON }}
-        run: |
-          python <<EOF
-          import json
-          import datetime
-          from boxsdk import JWTAuth, Client
-
-          # Load Box credentials
-          config = json.loads('${{ secrets.BOX_CONFIG_JSON }}')
-
-          # Authenticate
-          auth = JWTAuth.from_settings_dictionary(config["boxAppSettings"])
-          client = Client(auth)
-
-          # Folder ID
-          folder_id = "224419986473"
-
-          # Today's date
-          today = datetime.datetime.now().strftime("%m%d")
-          filename = f"企業一覧とユーザー一覧_{today}.xlsx"
-
-          # Upload file
-          folder = client.folder(folder_id=folder_id)
-          uploaded_file = folder.upload(f"output/{filename}", file_name=filename)
-          print(" File uploaded to Box:", uploaded_file.get_shared_link_download_url())
-          EOF
+        run: python upload_to_box.py
