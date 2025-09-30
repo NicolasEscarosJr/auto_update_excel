@@ -35,4 +35,6 @@ jobs:
           BOX_CONFIG_JSON: ${{ secrets.BOX_CONFIG_JSON }}
         run: |
           python -m pip show boxsdk
-          python upload_to_box.py
+          ls -al
+          python -m upload_to_box
+
