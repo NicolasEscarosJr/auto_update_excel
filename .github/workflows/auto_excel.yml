@@ -1,40 +1,58 @@
 name: Auto Update Excel
 
 on:
-  schedule:
-    - cron: '0 2 * * 5'  # Every Friday at 02:00 AM UTC
   workflow_dispatch:
 
 jobs:
-  update_excel:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt boxsdk pandas psycopg2-binary openpyxl
 
-    - name: Run Excel update script
-      env:
-        DB_HOST: ${{ secrets.DB_HOST }}
-        DB_PORT: ${{ secrets.DB_PORT }}
-        DB_NAME: ${{ secrets.DB_NAME }}
-        DB_USER: ${{ secrets.DB_USER }}
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      run: python auto_update_excel.py
+      - name: Run Python script
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: python auto_update_excel.py
 
-    - name: Upload output Excel as artifact
-      uses: actions/upload-artifact@v4
+      - name: Upload to Box
+        env:
+          BOX_CONFIG_JSON: ${{ secrets.BOX_CONFIG_JSON }}
+        run: |
+          python <<EOF
+          import json
+          import datetime
+          from boxsdk import JWTAuth, Client
 
-      with:
-        name: updated_excel
-        path: output/
+          # Load Box credentials
+          config = json.loads('${{ secrets.BOX_CONFIG_JSON }}')
+
+          # Authenticate
+          auth = JWTAuth.from_settings_dictionary(config["boxAppSettings"])
+          client = Client(auth)
+
+          # Folder ID
+          folder_id = "224419986473"
+
+          # Today's date
+          today = datetime.datetime.now().strftime("%m%d")
+          filename = f"企業一覧とユーザー一覧_{today}.xlsx"
+
+          # Upload file
+          folder = client.folder(folder_id=folder_id)
+          uploaded_file = folder.upload(f"output/{filename}", file_name=filename)
+          print(" File uploaded to Box:", uploaded_file.get_shared_link_download_url())
+          EOF
